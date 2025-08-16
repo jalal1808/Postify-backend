@@ -83,10 +83,13 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        return Comment.objects.filter(post_id=self.kwargs['post_id']).order_by('-created_at')
+        return Comment.objects.filter(post_id=self.kwargs['post_id'])
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user, post_id=self.kwargs['post_id'])
+        serializer.save(
+            post_id=self.kwargs['post_id'],
+            user=self.request.user   # ✅ fixed (use user, not author)
+        )
 
 
 class CommentDeleteAPIView(generics.DestroyAPIView):
@@ -94,7 +97,11 @@ class CommentDeleteAPIView(generics.DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Comment.objects.filter(user=self.request.user)
+        # ✅ ensures only the user's own comment AND matches post_id
+        return Comment.objects.filter(
+            user=self.request.user,
+            post_id=self.kwargs['post_id']
+        )
 
 
 # -----------------------------

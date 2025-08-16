@@ -34,12 +34,16 @@ class PostImageSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
-    images = PostImageSerializer(many=True, read_only=True)  # fetch multiple images
-    likes_count = serializers.IntegerField(read_only=True)   # integrate like count
+    images = PostImageSerializer(many=True, read_only=True)
+    likes_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'user', 'title', 'content', 'images', 'likes_count', 'created_at']
+        fields = ['id', 'title', 'content', 'author', 'images', 'likes_count', 'created_at']
+
+    def create(self, validated_data):
+        validated_data['author'] = self.context['request'].user
+        return super().create(validated_data)
 
 
 class LikeSerializer(serializers.ModelSerializer):
@@ -52,12 +56,12 @@ class LikeSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = serializers.StringRelatedField(read_only=True)  # shows username instead of ID
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'post', 'content', 'created_at', 'updated_at']
-        read_only_fields = ['user']
+        fields = ['id', 'post', 'user', 'content', 'created_at']
+        read_only_fields = ['id', 'post', 'user', 'created_at']  # ✅ post is read-only
 
 
 class CommentPreviewSerializer(serializers.ModelSerializer):
@@ -69,24 +73,13 @@ class CommentPreviewSerializer(serializers.ModelSerializer):
 
 
 class PostWithStatsSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
-    likes_count = serializers.IntegerField(source='likes.count', read_only=True)
-    comments_count = serializers.IntegerField(source='comments.count', read_only=True)
-    recent_comments = serializers.SerializerMethodField()
+    images = PostImageSerializer(many=True, read_only=True)
+    like_count = serializers.IntegerField(read_only=True)
+    comment_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Post
-        fields = [
-            'id',
-            'title',
-            'content',
-            'image',
-            'author',
-            'likes_count',
-            'comments_count',
-            'recent_comments',
-            'created_at'
-        ]
+        fields = ['id', 'title', 'content', 'images', 'like_count', 'comment_count']
 
     def get_recent_comments(self, obj):
         comments = obj.comments.order_by('-created_at')[:3]
