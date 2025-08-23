@@ -78,9 +78,3 @@ It allows users to register, create posts, upload images, like and comment on po
 ### AI (Gemini)
 
 * `POST /api/ai/title-suggestion/` → Get AI-generated blog title suggestion
-
----
-
-
-
-Do you also want me to **add a code snippet in README** showing how to call the Gemini API for title suggestion (like a sample request/response), or should we just keep the mention without examples?
