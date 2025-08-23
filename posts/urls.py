@@ -1,5 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .views import get_title_suggestions
 
 from .views import (
     RegisterView,
@@ -28,4 +29,5 @@ urlpatterns = [
 
     # Stats
     path('posts-with-stats/', PostListWithStatsAPIView.as_view(), name='posts_with_stats'),
+    path("title-suggestions/", get_title_suggestions, name="title-suggestions"),
 ]

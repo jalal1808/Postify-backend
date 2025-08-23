@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Post, Like, Comment, PostImage
+from .models import User, Post, Like, Comment
 from django.contrib.auth.password_validation import validate_password
 
 
@@ -27,24 +27,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-class PostImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostImage
-        fields = ['id', 'image']
-
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
-    images = PostImageSerializer(many=True, read_only=True)
     likes_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'author', 'images', 'likes_count', 'created_at']
-
-    def create(self, validated_data):
-        validated_data['author'] = self.context['request'].user
-        return super().create(validated_data)
-
+        fields = ['id', 'title', 'content', 'author', 'image', 'likes_count', 'created_at']
 
 class LikeSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -71,16 +60,26 @@ class CommentPreviewSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'user', 'content', 'created_at']
 
-
 class PostWithStatsSerializer(serializers.ModelSerializer):
-    images = PostImageSerializer(many=True, read_only=True)
+    author = UserSerializer(read_only=True)
     like_count = serializers.IntegerField(read_only=True)
     comment_count = serializers.IntegerField(read_only=True)
+    recent_comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'images', 'like_count', 'comment_count']
+        fields = [
+            'id',
+            'title',
+            'content',
+            'author',
+            'image',           # single image directly on Post
+            'like_count',
+            'comment_count',
+            'recent_comments',
+        ]
 
     def get_recent_comments(self, obj):
         comments = obj.comments.order_by('-created_at')[:3]
         return CommentPreviewSerializer(comments, many=True).data
+

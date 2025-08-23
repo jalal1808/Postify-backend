@@ -16,6 +16,7 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         related_name='posts'
     )
+    image = models.ImageField(upload_to='post_images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -24,13 +25,6 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-
-class PostImage(models.Model):
-    post = models.ForeignKey(Post, related_name="images", on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='post_images/')
-
-    def __str__(self):
-        return f"Image for {self.post.title}"
 
 class Like(models.Model):
     user = models.ForeignKey(

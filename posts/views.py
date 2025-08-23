@@ -4,6 +4,11 @@ from rest_framework import generics, permissions, viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.parsers import MultiPartParser, FormParser
+from .services.ai import suggest_titles
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+
 
 from .models import Post, Like, Comment
 from .serializers import (
@@ -28,9 +33,9 @@ class RegisterView(generics.CreateAPIView):
 # Posts
 # -----------------------------
 class PostListCreateView(generics.ListCreateAPIView):
-    queryset = Post.objects.all().order_by('-created_at')
+    queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser]  # 🔹 Needed for image upload
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -43,6 +48,15 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all().order_by('-created_at')
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser]   # ✅ Add this
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['category', 'author__username']
+    search_fields = ['title', 'content']
+    ordering_fields = ['created_at', 'title']
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
@@ -122,3 +136,13 @@ class PostListWithStatsAPIView(generics.ListAPIView):
             )
             .select_related('author')
         )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def get_title_suggestions(request):
+    content = request.data.get("content", "")
+    if not content:
+        return Response({"error": "Content is required"}, status=400)
+
+    titles = suggest_titles(content)
+    return Response({"suggestions": titles})
