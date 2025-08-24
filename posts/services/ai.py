@@ -3,16 +3,6 @@ import json
 from django.conf import settings
 
 def suggest_titles(content: str):
-    """
-    Suggests catchy blog titles for a given content string using the Gemini API.
-    This version includes more robust error handling and response structure control.
-
-    Args:
-        content (str): The body of the blog post to generate titles for.
-
-    Returns:
-        list: A list of suggested titles, or a list with a single error message.
-    """
     model = "models/gemini-2.5-flash-preview-05-20"
     url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateContent?key={settings.GEMINI_API_KEY}"
 
@@ -29,7 +19,7 @@ def suggest_titles(content: str):
         ],
         "generationConfig": {
             "temperature": 0.5,
-            "responseMimeType": "text/plain"  # Force a simple text response
+            "responseMimeType": "text/plain" 
         }
     }
 

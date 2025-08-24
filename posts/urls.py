@@ -29,5 +29,7 @@ urlpatterns = [
 
     # Stats
     path('posts-with-stats/', PostListWithStatsAPIView.as_view(), name='posts_with_stats'),
+
+    # Ai suggestions
     path("title-suggestions/", get_title_suggestions, name="title-suggestions"),
 ]

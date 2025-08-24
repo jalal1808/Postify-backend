@@ -45,12 +45,12 @@ class LikeSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)  # shows username instead of ID
+    user = serializers.StringRelatedField(read_only=True) 
 
     class Meta:
         model = Comment
         fields = ['id', 'post', 'user', 'content', 'created_at']
-        read_only_fields = ['id', 'post', 'user', 'created_at']  # ✅ post is read-only
+        read_only_fields = ['id', 'post', 'user', 'created_at']  
 
 
 class CommentPreviewSerializer(serializers.ModelSerializer):
@@ -73,7 +73,7 @@ class PostWithStatsSerializer(serializers.ModelSerializer):
             'title',
             'content',
             'author',
-            'image',           # single image directly on Post
+            'image',          
             'like_count',
             'comment_count',
             'recent_comments',

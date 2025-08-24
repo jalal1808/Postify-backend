@@ -20,22 +20,16 @@ from .serializers import (
 )
 from .permissions import IsAuthorOrReadOnly
 
-
-# -----------------------------
 # User Registration
-# -----------------------------
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
-
-# -----------------------------
 # Posts
-# -----------------------------
 class PostListCreateView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    parser_classes = [MultiPartParser, FormParser]  # 🔹 Needed for image upload
+    parser_classes = [MultiPartParser, FormParser] 
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -51,7 +45,7 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    parser_classes = [MultiPartParser, FormParser]   # ✅ Add this
+    parser_classes = [MultiPartParser, FormParser]   
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'author__username']
@@ -66,10 +60,7 @@ class PostViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'content']
     ordering_fields = ['created_at', 'title']
 
-
-# -----------------------------
 # Likes
-# -----------------------------
 class LikePostAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -88,10 +79,7 @@ class LikePostAPIView(APIView):
             return Response({'detail': 'Unliked'}, status=status.HTTP_204_NO_CONTENT)
         return Response({'detail': 'Like not found'}, status=status.HTTP_404_NOT_FOUND)
 
-
-# -----------------------------
 # Comments
-# -----------------------------
 class CommentListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -102,7 +90,7 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(
             post_id=self.kwargs['post_id'],
-            user=self.request.user   # ✅ fixed (use user, not author)
+            user=self.request.user  
         )
 
 
@@ -111,16 +99,13 @@ class CommentDeleteAPIView(generics.DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # ✅ ensures only the user's own comment AND matches post_id
+        # ensures only the user's own comment AND matches post_id
         return Comment.objects.filter(
             user=self.request.user,
             post_id=self.kwargs['post_id']
         )
 
-
-# -----------------------------
 # Posts with Stats
-# -----------------------------
 class PostListWithStatsAPIView(generics.ListAPIView):
     serializer_class = PostWithStatsSerializer
     permission_classes = [permissions.AllowAny]
